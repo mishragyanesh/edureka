@@ -1,0 +1,17 @@
+{
+	"name": "SQL script 1",
+	"properties": {
+		"content": {
+			"query": "Create table gametable_replicate\n(\n    stuid int,\n    game varchar(50),\n    fees INT\n)\nWITH\n(\n    DISTRIBUTION = REPLICATE\n)",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "sqlPool01",
+				"poolName": "sqlPool01"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}
