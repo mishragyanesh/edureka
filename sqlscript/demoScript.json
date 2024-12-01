@@ -1,0 +1,17 @@
+{
+	"name": "demoScript",
+	"properties": {
+		"content": {
+			"query": "Create database serverlesspooldb\n\n-- This is auto-generated code\nSELECT\n    TOP 100 *\nFROM\n    OPENROWSET(\n        BULK 'https://demostorageacctgm.dfs.core.windows.net/files/ecdc_cases.csv',\n        FORMAT = 'CSV',\n        PARSER_VERSION = '2.0',\n        HEADER_ROW = TRUE\n    ) AS [result]\n\ncreate external data source covid\nwith ( location = 'https://demostorageacctgm.dfs.core.windows.net/files')\n\nSELECT\n    TOP 100 *\nFROM\n    OPENROWSET(\n        BULK 'ecdc_cases.csv',\n        data_source = 'covid',\n        FORMAT = 'CSV',\n        PARSER_VERSION = '2.0',\n        FIRSTROW = 2\n      --  HEADER_ROW = TRUE\n    ) with (\n        reportdate varchar(10) 1, \n        covidcases int 5,\n        location varchar(6) 8\n    ) as rows\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n    ",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "serverlesspooldb",
+				"poolName": "Built-in"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}
