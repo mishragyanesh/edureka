@@ -1,0 +1,409 @@
+{
+	"name": "SecondNotebook",
+	"properties": {
+		"nbformat": 4,
+		"nbformat_minor": 2,
+		"bigDataPool": {
+			"referenceName": "sparkPool1",
+			"type": "BigDataPoolReference"
+		},
+		"sessionProperties": {
+			"driverMemory": "56g",
+			"driverCores": 8,
+			"executorMemory": "56g",
+			"executorCores": 8,
+			"numExecutors": 2,
+			"conf": {
+				"spark.dynamicAllocation.enabled": "false",
+				"spark.dynamicAllocation.minExecutors": "2",
+				"spark.dynamicAllocation.maxExecutors": "2",
+				"spark.autotune.trackingId": "59cf1891-7083-4093-b3bd-c08d1f63a7b2"
+			}
+		},
+		"metadata": {
+			"saveOutput": true,
+			"enableDebugMode": false,
+			"kernelspec": {
+				"name": "synapse_pyspark",
+				"display_name": "Synapse PySpark"
+			},
+			"language_info": {
+				"name": "python"
+			},
+			"a365ComputeOptions": {
+				"id": "/subscriptions/9219fbc5-d118-416c-a7ce-62948d4754f1/resourceGroups/synapserg/providers/Microsoft.Synapse/workspaces/demoazuresynpasegm/bigDataPools/sparkPool1",
+				"name": "sparkPool1",
+				"type": "Spark",
+				"endpoint": "https://demoazuresynpasegm.dev.azuresynapse.net/livyApi/versions/2019-11-01-preview/sparkPools/sparkPool1",
+				"auth": {
+					"type": "AAD",
+					"authResource": "https://dev.azuresynapse.net"
+				},
+				"sparkVersion": "3.4",
+				"nodeCount": 3,
+				"cores": 8,
+				"memory": 56,
+				"automaticScaleJobs": false
+			},
+			"sessionKeepAliveTimeout": 30
+		},
+		"cells": [
+			{
+				"cell_type": "code",
+				"source": [
+					"print(\"hi\")"
+				],
+				"execution_count": 5
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"# Emp Data & Schema\r\n",
+					"\r\n",
+					"emp_data = [\r\n",
+					"    [\"001\",\"101\",\"John Doe\",\"30\",\"Male\",\"50000\",\"2015-01-01\"],\r\n",
+					"    [\"002\",\"101\",\"Jane Smith\",\"25\",\"Female\",\"45000\",\"2016-02-15\"],\r\n",
+					"    [\"003\",\"102\",\"Bob Brown\",\"35\",\"Male\",\"55000\",\"2014-05-01\"],\r\n",
+					"    [\"004\",\"102\",\"Alice Lee\",\"28\",\"Female\",\"48000\",\"2017-09-30\"],\r\n",
+					"    [\"005\",\"103\",\"Jack Chan\",\"40\",\"Male\",\"60000\",\"2013-04-01\"],\r\n",
+					"    [\"006\",\"103\",\"Jill Wong\",\"32\",\"Female\",\"52000\",\"2018-07-01\"],\r\n",
+					"    [\"007\",\"101\",\"James Johnson\",\"42\",\"Male\",\"70000\",\"2012-03-15\"],\r\n",
+					"    [\"008\",\"102\",\"Kate Kim\",\"29\",\"Female\",\"51000\",\"2019-10-01\"],\r\n",
+					"    [\"009\",\"103\",\"Tom Tan\",\"33\",\"Male\",\"58000\",\"2016-06-01\"],\r\n",
+					"    [\"010\",\"104\",\"Lisa Lee\",\"27\",\"Female\",\"47000\",\"2018-08-01\"],\r\n",
+					"    [\"011\",\"104\",\"David Park\",\"38\",\"Male\",\"65000\",\"2015-11-01\"],\r\n",
+					"    [\"012\",\"105\",\"Susan Chen\",\"31\",\"Female\",\"54000\",\"2017-02-15\"],\r\n",
+					"    [\"013\",\"106\",\"Brian Kim\",\"45\",\"Male\",\"75000\",\"2011-07-01\"],\r\n",
+					"    [\"014\",\"107\",\"Emily Lee\",\"26\",\"Female\",\"46000\",\"2019-01-01\"],\r\n",
+					"    [\"015\",\"106\",\"Michael Lee\",\"37\",\"Male\",\"63000\",\"2014-09-30\"],\r\n",
+					"    [\"016\",\"107\",\"Kelly Zhang\",\"30\",\"Female\",\"49000\",\"2018-04-01\"],\r\n",
+					"    [\"017\",\"105\",\"George Wang\",\"34\",\"Male\",\"57000\",\"2016-03-15\"],\r\n",
+					"    [\"018\",\"104\",\"Nancy Liu\",\"29\",\"Female\",\"50000\",\"2017-06-01\"],\r\n",
+					"    [\"019\",\"103\",\"Steven Chen\",\"36\",\"Male\",\"62000\",\"2015-08-01\"],\r\n",
+					"    [\"020\",\"102\",\"Grace Kim\",\"32\",\"Female\",\"53000\",\"2018-11-01\"]\r\n",
+					"]\r\n",
+					"\r\n",
+					"emp_schema = \"employee_id string, department_id string, name string, age string, gender string, salary string, hire_date string\""
+				],
+				"execution_count": 6
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"#create emp dataframe\r\n",
+					"\r\n",
+					"emp = spark.createDataFrame(data=emp_data, schema=emp_schema)"
+				],
+				"execution_count": 7
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"emp.printSchema()"
+				],
+				"execution_count": 9
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"emp.show()"
+				],
+				"execution_count": 10
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"from pyspark.sql.functions import *\r\n",
+					"emp_filter_df = emp.select(col(\"employee_id\"), col(\"name\"), col(\"age\"), col(\"salary\"))"
+				],
+				"execution_count": 14
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"emp_filter_df.show()"
+				],
+				"execution_count": 15
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"emp_filter_df.printSchema()"
+				],
+				"execution_count": 16
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"emp_casted = emp_filter_df.select(expr(\"employee_id as emp_id\"), emp.name, expr(\"cast(age as int) as age\"), col(\"salary\").cast(\"double\"))"
+				],
+				"execution_count": 23
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"emp_casted.printSchema()"
+				],
+				"execution_count": 24
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					},
+					"collapsed": false
+				},
+				"source": [
+					"display(emp_casted)"
+				],
+				"execution_count": 25
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					},
+					"collapsed": false
+				},
+				"source": [
+					"emp_taxed = emp_casted.withColumn(\"tax\", col(\"salary\") * 0.2)\r\n",
+					"display(emp_taxed)"
+				],
+				"execution_count": 26
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"emp_filtered = emp_taxed.where(\"tax > 10000\")\r\n",
+					"emp_filtered.show()"
+				],
+				"execution_count": 29
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"emp.show()"
+				],
+				"execution_count": 30
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"emp_gender = emp.withColumn(\"new_gender\", expr(\"case when gender = 'Male' then 'M' when gender = 'Female' then 'F' else null end\"))"
+				],
+				"execution_count": 32
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"emp_gender.show()"
+				],
+				"execution_count": 33
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					},
+					"collapsed": false
+				},
+				"source": [
+					"from pyspark.sql.functions import *\r\n",
+					"\r\n",
+					"emp_name_df = emp_gender.withColumn(\"new_name\", regexp_replace(\"name\", \"J\", \"Z\"))\r\n",
+					"\r\n",
+					"display(emp_name_df)"
+				],
+				"execution_count": 34
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					},
+					"collapsed": false
+				},
+				"source": [
+					"emp_date_df= emp_name_df.withColumn(\"hire_date_new\", to_date(col(\"hire_date\"), 'yyyy-mm-dd')).withColumn(\"hire_date_new\", date_format(col(\"hire_date_new\"), \"dd/MMM/yyyy\"))\r\n",
+					"\r\n",
+					"\r\n",
+					"display(emp_date_df)\r\n",
+					"\r\n",
+					"emp_date_df.printSchema()"
+				],
+				"execution_count": 43
+			}
+		]
+	}
+}
