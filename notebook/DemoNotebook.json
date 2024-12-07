@@ -17,7 +17,7 @@
 				"spark.dynamicAllocation.enabled": "false",
 				"spark.dynamicAllocation.minExecutors": "2",
 				"spark.dynamicAllocation.maxExecutors": "2",
-				"spark.autotune.trackingId": "35d0a013-7821-45a9-9e80-b3c364f6438e"
+				"spark.autotune.trackingId": "c0437161-5a7c-4dc1-a05e-39a0ee0516db"
 			}
 		},
 		"metadata": {
@@ -94,10 +94,154 @@
 				},
 				"source": [
 					"%%pyspark\r\n",
-					"df = spark.read.load('abfss://demofilesystem@demoadlsacctgm.dfs.core.windows.net/data/ParquetDir/2019.snappy.parquet', format='parquet')\r\n",
+					"dfSales = spark.read.load('abfss://demofilesystem@demoadlsacctgm.dfs.core.windows.net/data/ParquetDir/2019.snappy.parquet', format='parquet')\r\n",
 					"display(df.limit(10))"
 				],
-				"execution_count": 4
+				"execution_count": 22
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					},
+					"microsoft": {
+						"language": "python"
+					},
+					"collapsed": false
+				},
+				"source": [
+					"%%pyspark\r\n",
+					"dfProduct = spark.read.load('abfss://demofilesystem@demoadlsacctgm.dfs.core.windows.net/data/CSV/productsinfo.csv', format='csv'\r\n",
+					"## If header exists uncomment line below\r\n",
+					", header=True\r\n",
+					")\r\n",
+					"display(dfProduct.limit(10))"
+				],
+				"execution_count": 8
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					},
+					"collapsed": false
+				},
+				"source": [
+					"#manipulate dataframe\r\n",
+					"counts_df = dfProduct.select(\"ProductID\", \"Category\" ).groupBy(\"Category\").count()\r\n",
+					"display(counts_df)"
+				],
+				"execution_count": 9
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					},
+					"collapsed": false
+				},
+				"source": [
+					"# Create a table in the metastore\r\n",
+					"dfProduct.createOrReplaceTempView(\"products\")\r\n",
+					"\r\n",
+					"# Use spark.sql method for inline SQL queries that return a dataframe\r\n",
+					"bikes_df = spark.sql(\"SELECT ProductID, ProductName, Category, ListPrice \\\r\n",
+					"                      FROM products \\\r\n",
+					"                      WHERE Category IN ('Mountain Bikes', 'Road Bikes')\")\r\n",
+					"display(bikes_df)\r\n",
+					""
+				],
+				"execution_count": 17
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					},
+					"microsoft": {
+						"language": "sparksql"
+					},
+					"collapsed": false
+				},
+				"source": [
+					"%%sql\r\n",
+					"\r\n",
+					"SELECT Category, COUNT(ProductID) AS ProductCount\r\n",
+					"FROM products --where category in ('Road Bikes', 'Saddles', 'Touring Bikes')\r\n",
+					"GROUP BY Category\r\n",
+					"ORDER BY Category\r\n",
+					""
+				],
+				"execution_count": 13
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"from pyspark.sql.functions import *"
+				],
+				"execution_count": 23
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					},
+					"collapsed": false
+				},
+				"source": [
+					"#Add Year Column\r\n",
+					"\r\n",
+					"dfYearCol = dfSales.withColumn(\"Year\", year(col(\"OrderDate\"))).withColumnRenamed(\"SalesOrderLineItem\", \"LineItem\")\r\n",
+					"\r\n",
+					"display(dfYearCol)"
+				],
+				"execution_count": 25
 			}
 		]
 	}
