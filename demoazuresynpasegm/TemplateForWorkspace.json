@@ -1,0 +1,943 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"workspaceName": {
+			"type": "string",
+			"metadata": "Workspace name",
+			"defaultValue": "demoazuresynpasegm"
+		},
+		"demoazuresynpasegm-WorkspaceDefaultSqlServer_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'demoazuresynpasegm-WorkspaceDefaultSqlServer'",
+			"defaultValue": "Integrated Security=False;Encrypt=True;Connection Timeout=30;Data Source=tcp:demoazuresynpasegm.sql.azuresynapse.net,1433;Initial Catalog=@{linkedService().DBName}"
+		},
+		"gyaneshsynapsews-WorkspaceDefaultSqlServer_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'gyaneshsynapsews-WorkspaceDefaultSqlServer'",
+			"defaultValue": "Integrated Security=False;Encrypt=True;Connection Timeout=30;Data Source=tcp:gyaneshsynapsews.sql.azuresynapse.net,1433;Initial Catalog=@{linkedService().DBName}"
+		},
+		"demoazuresynpasegm-WorkspaceDefaultStorage_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://demoadlsacctgm.dfs.core.windows.net"
+		}
+	},
+	"variables": {
+		"workspaceId": "[concat('Microsoft.Synapse/workspaces/', parameters('workspaceName'))]"
+	},
+	"resources": [
+		{
+			"name": "[concat(parameters('workspaceName'), '/demoazuresynpasegm-WorkspaceDefaultSqlServer')]",
+			"type": "Microsoft.Synapse/workspaces/linkedServices",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"parameters": {
+					"DBName": {
+						"type": "String"
+					}
+				},
+				"annotations": [],
+				"type": "AzureSqlDW",
+				"typeProperties": {
+					"connectionString": "[parameters('demoazuresynpasegm-WorkspaceDefaultSqlServer_connectionString')]"
+				},
+				"connectVia": {
+					"referenceName": "AutoResolveIntegrationRuntime",
+					"type": "IntegrationRuntimeReference"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/integrationRuntimes/AutoResolveIntegrationRuntime')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/demoazuresynpasegm-WorkspaceDefaultStorage')]",
+			"type": "Microsoft.Synapse/workspaces/linkedServices",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"annotations": [],
+				"type": "AzureBlobFS",
+				"typeProperties": {
+					"url": "[parameters('demoazuresynpasegm-WorkspaceDefaultStorage_properties_typeProperties_url')]"
+				},
+				"connectVia": {
+					"referenceName": "AutoResolveIntegrationRuntime",
+					"type": "IntegrationRuntimeReference"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/integrationRuntimes/AutoResolveIntegrationRuntime')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/gyaneshsynapsews-WorkspaceDefaultSqlServer')]",
+			"type": "Microsoft.Synapse/workspaces/linkedServices",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"parameters": {
+					"DBName": {
+						"type": "String"
+					}
+				},
+				"annotations": [],
+				"type": "AzureSqlDW",
+				"typeProperties": {
+					"connectionString": "[parameters('gyaneshsynapsews-WorkspaceDefaultSqlServer_connectionString')]"
+				},
+				"connectVia": {
+					"referenceName": "AutoResolveIntegrationRuntime",
+					"type": "IntegrationRuntimeReference"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/integrationRuntimes/AutoResolveIntegrationRuntime')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/AutoResolveIntegrationRuntime')]",
+			"type": "Microsoft.Synapse/workspaces/integrationRuntimes",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"type": "Managed",
+				"typeProperties": {
+					"computeProperties": {
+						"location": "AutoResolve",
+						"dataFlowProperties": {
+							"computeType": "General",
+							"coreCount": 8,
+							"timeToLive": 0
+						}
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/WorkspaceSystemIdentity')]",
+			"type": "Microsoft.Synapse/workspaces/credentials",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"type": "ManagedIdentity",
+				"typeProperties": {}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/SQL script 1')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"content": {
+					"query": "Create table gametable_replicate\n(\n    stuid int,\n    game varchar(50),\n    fees INT\n)\nWITH\n(\n    DISTRIBUTION = REPLICATE\n)",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "sqlPool01",
+						"poolName": "sqlPool01"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/demoScript')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"content": {
+					"query": "Create database serverlesspooldb\n\n-- This is auto-generated code\nSELECT\n    TOP 100 *\nFROM\n    OPENROWSET(\n        BULK 'https://demostorageacctgm.dfs.core.windows.net/files/ecdc_cases.csv',\n        FORMAT = 'CSV',\n        PARSER_VERSION = '2.0',\n        HEADER_ROW = TRUE\n    ) AS [result]\n\ncreate external data source covid\nwith ( location = 'https://demostorageacctgm.dfs.core.windows.net/files')\n\nSELECT\n    TOP 100 *\nFROM\n    OPENROWSET(\n        BULK 'ecdc_cases.csv',\n        data_source = 'covid',\n        FORMAT = 'CSV',\n        PARSER_VERSION = '2.0',\n        FIRSTROW = 2\n      --  HEADER_ROW = TRUE\n    ) with (\n        reportdate varchar(10) 1, \n        covidcases int 5,\n        location varchar(6) 8\n    ) as rows\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n    ",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "serverlesspooldb",
+						"poolName": "Built-in"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/getmetadatainfo')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"content": {
+					"query": "--Sales Resource\nCREATE DATABASE SCOPED CREDENTIAL [sqlondemand] \nWITH IDENTITY='SHARED ACCESS SIGNATURE',   \nSECRET = 'sv=2022-11-02&ss=bf&srt=sco&sp=rwdlacyx&se=2024-12-02T01:28:45Z&st=2024-12-01T17:28:45Z&spr=https&sig=IM5EBUH%2FY%2B5R%2F7ymDXNUs7jEpkBk8AXKPMAxsouaQPA%3D'\n\n--Create External Data Source\nCREATE EXTERNAL DATA SOURCE SqlOnDemandDemo WITH ( \n    LOCATION = 'https://demostorageacctgm.blob.core.windows.net', \n    CREDENTIAL = sqlondemand );\n--Create External File Format\nCREATE EXTERNAL FILE FORMAT QuotedCSV\nWITH \n( FORMAT_TYPE = DELIMITEDTEXT, \nFORMAT_OPTIONS ( FIELD_TERMINATOR = ',', STRING_DELIMITER = '\"', FIRST_ROW = 2 ) );\n--Create external Table\nCREATE EXTERNAL TABLE EmployeeTbl\n(\n    EmloyeeId int,\n    EmployeeName varchar(50),\n    EmployeeAge int,\n    EmployeeSalary INT\n)\nWITH\n(\n    LOCATION = 'files/employee.csv',\n    DATA_SOURCE = SqlOnDemandDemo,\n    FILE_FORMAT = QuotedCSV\n)\n\ncreate view vwEmployee\nas\nSelect * from EmployeeTbl\n\nselect * from vwEmployee\n\n",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "SalesDB",
+						"poolName": "Built-in"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/readingJson')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"content": {
+					"query": "-- This is auto-generated code\nSELECT\n    TOP 100 *\n    /* --> place the keys that you see in JSON documents in the WITH clause:\n    , JSON_VALUE (jsonContent, '$.key1') AS header1\n    , JSON_VALUE (jsonContent, '$.key2') AS header2\n    */\nFROM\n    OPENROWSET(\n        BULK 'https://demostorageacctgm.dfs.core.windows.net/files/ecdc_cases.jsonl',\n        FORMAT = 'CSV',\n        -- FIELDQUOTE and FIELDTERMINATOR are set to 0x0b as we do not expect to find it in the file.\n        FIELDQUOTE = '0x0b',\n        FIELDTERMINATOR ='0x0b'\n    )\n    WITH (\n        line varchar(max)\n    ) AS [result]\n",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "serverlesspooldb",
+						"poolName": "Built-in"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/readingParquet')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"content": {
+					"query": "-- This is auto-generated code\nSELECT\n    TOP 100 *\nFROM\n    OPENROWSET(\n        BULK 'https://demostorageacctgm.dfs.core.windows.net/files/ecdc_cases.parquet',\n        FORMAT = 'PARQUET'\n    ) AS [result]\n",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "serverlesspooldb",
+						"poolName": "Built-in"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/DemoNotebook')]",
+			"type": "Microsoft.Synapse/workspaces/notebooks",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"nbformat": 4,
+				"nbformat_minor": 2,
+				"bigDataPool": {
+					"referenceName": "sparkPool1",
+					"type": "BigDataPoolReference"
+				},
+				"sessionProperties": {
+					"driverMemory": "56g",
+					"driverCores": 8,
+					"executorMemory": "56g",
+					"executorCores": 8,
+					"numExecutors": 2,
+					"conf": {
+						"spark.dynamicAllocation.enabled": "false",
+						"spark.dynamicAllocation.minExecutors": "2",
+						"spark.dynamicAllocation.maxExecutors": "2",
+						"spark.autotune.trackingId": "e0c774fc-7c71-44f9-9170-c2e59ab58d36"
+					}
+				},
+				"metadata": {
+					"saveOutput": true,
+					"enableDebugMode": false,
+					"kernelspec": {
+						"name": "synapse_pyspark",
+						"display_name": "Synapse PySpark"
+					},
+					"language_info": {
+						"name": "python"
+					},
+					"a365ComputeOptions": {
+						"id": "/subscriptions/9219fbc5-d118-416c-a7ce-62948d4754f1/resourceGroups/synapserg/providers/Microsoft.Synapse/workspaces/demoazuresynpasegm/bigDataPools/sparkPool1",
+						"name": "sparkPool1",
+						"type": "Spark",
+						"endpoint": "https://demoazuresynpasegm.dev.azuresynapse.net/livyApi/versions/2019-11-01-preview/sparkPools/sparkPool1",
+						"auth": {
+							"type": "AAD",
+							"authResource": "https://dev.azuresynapse.net"
+						},
+						"sparkVersion": "3.4",
+						"nodeCount": 3,
+						"cores": 8,
+						"memory": 56,
+						"automaticScaleJobs": false
+					},
+					"sessionKeepAliveTimeout": 30
+				},
+				"cells": [
+					{
+						"cell_type": "code",
+						"metadata": {},
+						"source": [
+							"print(\"Hello World\")"
+						],
+						"outputs": [],
+						"execution_count": 1
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"new_rows = [('CA',22, 45000),(\"WA\",35,65000) ,(\"WA\",50,85000)]\r\n",
+							"demo_df = spark.createDataFrame(new_rows, ['state', 'age', 'salary'])\r\n",
+							"demo_df.show()"
+						],
+						"outputs": [],
+						"execution_count": 3
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							},
+							"microsoft": {
+								"language": "python"
+							},
+							"collapsed": false
+						},
+						"source": [
+							"%%pyspark\r\n",
+							"dfSales = spark.read.load('abfss://demofilesystem@demoadlsacctgm.dfs.core.windows.net/data/ParquetDir/2019.snappy.parquet', format='parquet')\r\n",
+							"display(df.limit(10))"
+						],
+						"outputs": [],
+						"execution_count": 22
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							},
+							"microsoft": {
+								"language": "python"
+							},
+							"collapsed": false
+						},
+						"source": [
+							"%%pyspark\r\n",
+							"dfProduct = spark.read.load('abfss://demofilesystem@demoadlsacctgm.dfs.core.windows.net/data/CSV/productsinfo.csv', format='csv'\r\n",
+							"## If header exists uncomment line below\r\n",
+							", header=True\r\n",
+							")\r\n",
+							"display(dfProduct.limit(10))"
+						],
+						"outputs": [],
+						"execution_count": 8
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							},
+							"collapsed": false
+						},
+						"source": [
+							"#manipulate dataframe\r\n",
+							"counts_df = dfProduct.select(\"ProductID\", \"Category\" ).groupBy(\"Category\").count()\r\n",
+							"display(counts_df)"
+						],
+						"outputs": [],
+						"execution_count": 9
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							},
+							"collapsed": false
+						},
+						"source": [
+							"# Create a table in the metastore\r\n",
+							"dfProduct.createOrReplaceTempView(\"products\")\r\n",
+							"\r\n",
+							"# Use spark.sql method for inline SQL queries that return a dataframe\r\n",
+							"bikes_df = spark.sql(\"SELECT ProductID, ProductName, Category, ListPrice \\\r\n",
+							"                      FROM products \\\r\n",
+							"                      WHERE Category IN ('Mountain Bikes', 'Road Bikes')\")\r\n",
+							"display(bikes_df)\r\n",
+							""
+						],
+						"outputs": [],
+						"execution_count": 17
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							},
+							"microsoft": {
+								"language": "sparksql"
+							},
+							"collapsed": false
+						},
+						"source": [
+							"%%sql\r\n",
+							"\r\n",
+							"SELECT Category, COUNT(ProductID) AS ProductCount\r\n",
+							"FROM products --where category in ('Road Bikes', 'Saddles', 'Touring Bikes')\r\n",
+							"GROUP BY Category\r\n",
+							"ORDER BY Category\r\n",
+							""
+						],
+						"outputs": [],
+						"execution_count": 13
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"from pyspark.sql.functions import *"
+						],
+						"outputs": [],
+						"execution_count": 23
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							},
+							"collapsed": false
+						},
+						"source": [
+							"#Add Year Column\r\n",
+							"\r\n",
+							"dfYearCol = dfSales.withColumn(\"Year\", year(col(\"OrderDate\"))).withColumnRenamed(\"SalesOrderLineItem\", \"LineItem\")\r\n",
+							"\r\n",
+							"display(dfYearCol)"
+						],
+						"outputs": [],
+						"execution_count": 25
+					}
+				]
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/sparkPool1')]",
+			"type": "Microsoft.Synapse/workspaces/bigDataPools",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"autoPause": {
+					"enabled": true,
+					"delayInMinutes": 15
+				},
+				"autoScale": {
+					"enabled": true,
+					"maxNodeCount": 10,
+					"minNodeCount": 3
+				},
+				"nodeCount": 0,
+				"nodeSize": "Medium",
+				"nodeSizeFamily": "MemoryOptimized",
+				"sparkVersion": "3.4",
+				"isComputeIsolationEnabled": false,
+				"sessionLevelPackagesEnabled": true,
+				"annotations": []
+			},
+			"dependsOn": [],
+			"location": "eastus2"
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/SecondNotebook')]",
+			"type": "Microsoft.Synapse/workspaces/notebooks",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"nbformat": 4,
+				"nbformat_minor": 2,
+				"bigDataPool": {
+					"referenceName": "sparkPool1",
+					"type": "BigDataPoolReference"
+				},
+				"sessionProperties": {
+					"driverMemory": "56g",
+					"driverCores": 8,
+					"executorMemory": "56g",
+					"executorCores": 8,
+					"numExecutors": 2,
+					"conf": {
+						"spark.dynamicAllocation.enabled": "false",
+						"spark.dynamicAllocation.minExecutors": "2",
+						"spark.dynamicAllocation.maxExecutors": "2",
+						"spark.autotune.trackingId": "b0f13270-dcd4-41d0-aa73-42585e91d160"
+					}
+				},
+				"metadata": {
+					"saveOutput": true,
+					"enableDebugMode": false,
+					"kernelspec": {
+						"name": "synapse_pyspark",
+						"display_name": "Synapse PySpark"
+					},
+					"language_info": {
+						"name": "python"
+					},
+					"a365ComputeOptions": {
+						"id": "/subscriptions/9219fbc5-d118-416c-a7ce-62948d4754f1/resourceGroups/synapserg/providers/Microsoft.Synapse/workspaces/demoazuresynpasegm/bigDataPools/sparkPool1",
+						"name": "sparkPool1",
+						"type": "Spark",
+						"endpoint": "https://demoazuresynpasegm.dev.azuresynapse.net/livyApi/versions/2019-11-01-preview/sparkPools/sparkPool1",
+						"auth": {
+							"type": "AAD",
+							"authResource": "https://dev.azuresynapse.net"
+						},
+						"sparkVersion": "3.4",
+						"nodeCount": 3,
+						"cores": 8,
+						"memory": 56,
+						"automaticScaleJobs": false
+					},
+					"sessionKeepAliveTimeout": 30
+				},
+				"cells": [
+					{
+						"cell_type": "code",
+						"metadata": {},
+						"source": [
+							"print(\"hi\")"
+						],
+						"outputs": [],
+						"execution_count": 5
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"# Emp Data & Schema\r\n",
+							"\r\n",
+							"emp_data = [\r\n",
+							"    [\"001\",\"101\",\"John Doe\",\"30\",\"Male\",\"50000\",\"2015-01-01\"],\r\n",
+							"    [\"002\",\"101\",\"Jane Smith\",\"25\",\"Female\",\"45000\",\"2016-02-15\"],\r\n",
+							"    [\"003\",\"102\",\"Bob Brown\",\"35\",\"Male\",\"55000\",\"2014-05-01\"],\r\n",
+							"    [\"004\",\"102\",\"Alice Lee\",\"28\",\"Female\",\"48000\",\"2017-09-30\"],\r\n",
+							"    [\"005\",\"103\",\"Jack Chan\",\"40\",\"Male\",\"60000\",\"2013-04-01\"],\r\n",
+							"    [\"006\",\"103\",\"Jill Wong\",\"32\",\"Female\",\"52000\",\"2018-07-01\"],\r\n",
+							"    [\"007\",\"101\",\"James Johnson\",\"42\",\"Male\",\"70000\",\"2012-03-15\"],\r\n",
+							"    [\"008\",\"102\",\"Kate Kim\",\"29\",\"Female\",\"51000\",\"2019-10-01\"],\r\n",
+							"    [\"009\",\"103\",\"Tom Tan\",\"33\",\"Male\",\"58000\",\"2016-06-01\"],\r\n",
+							"    [\"010\",\"104\",\"Lisa Lee\",\"27\",\"Female\",\"47000\",\"2018-08-01\"],\r\n",
+							"    [\"011\",\"104\",\"David Park\",\"38\",\"Male\",\"65000\",\"2015-11-01\"],\r\n",
+							"    [\"012\",\"105\",\"Susan Chen\",\"31\",\"Female\",\"54000\",\"2017-02-15\"],\r\n",
+							"    [\"013\",\"106\",\"Brian Kim\",\"45\",\"Male\",\"75000\",\"2011-07-01\"],\r\n",
+							"    [\"014\",\"107\",\"Emily Lee\",\"26\",\"Female\",\"46000\",\"2019-01-01\"],\r\n",
+							"    [\"015\",\"106\",\"Michael Lee\",\"37\",\"Male\",\"63000\",\"2014-09-30\"],\r\n",
+							"    [\"016\",\"107\",\"Kelly Zhang\",\"30\",\"Female\",\"49000\",\"2018-04-01\"],\r\n",
+							"    [\"017\",\"105\",\"George Wang\",\"34\",\"Male\",\"57000\",\"2016-03-15\"],\r\n",
+							"    [\"018\",\"104\",\"Nancy Liu\",\"29\",\"Female\",\"50000\",\"2017-06-01\"],\r\n",
+							"    [\"019\",\"103\",\"Steven Chen\",\"36\",\"Male\",\"62000\",\"2015-08-01\"],\r\n",
+							"    [\"020\",\"102\",\"Grace Kim\",\"32\",\"Female\",\"53000\",\"2018-11-01\"]\r\n",
+							"]\r\n",
+							"\r\n",
+							"emp_schema = \"employee_id string, department_id string, name string, age string, gender string, salary string, hire_date string\""
+						],
+						"outputs": [],
+						"execution_count": 6
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"#create emp dataframe\r\n",
+							"\r\n",
+							"emp = spark.createDataFrame(data=emp_data, schema=emp_schema)"
+						],
+						"outputs": [],
+						"execution_count": 7
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"emp.printSchema()"
+						],
+						"outputs": [],
+						"execution_count": 9
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"emp.show()"
+						],
+						"outputs": [],
+						"execution_count": 10
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"from pyspark.sql.functions import *\r\n",
+							"emp_filter_df = emp.select(col(\"employee_id\"), col(\"name\"), col(\"age\"), col(\"salary\"))"
+						],
+						"outputs": [],
+						"execution_count": 14
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"emp_filter_df.show()"
+						],
+						"outputs": [],
+						"execution_count": 15
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"emp_filter_df.printSchema()"
+						],
+						"outputs": [],
+						"execution_count": 16
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"emp_casted = emp_filter_df.select(expr(\"employee_id as emp_id\"), emp.name, expr(\"cast(age as int) as age\"), col(\"salary\").cast(\"double\"))"
+						],
+						"outputs": [],
+						"execution_count": 23
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"emp_casted.printSchema()"
+						],
+						"outputs": [],
+						"execution_count": 24
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							},
+							"collapsed": false
+						},
+						"source": [
+							"display(emp_casted)"
+						],
+						"outputs": [],
+						"execution_count": 25
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							},
+							"collapsed": false
+						},
+						"source": [
+							"emp_taxed = emp_casted.withColumn(\"tax\", col(\"salary\") * 0.2)\r\n",
+							"display(emp_taxed)"
+						],
+						"outputs": [],
+						"execution_count": 26
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"emp_filtered = emp_taxed.where(\"tax > 10000\")\r\n",
+							"emp_filtered.show()"
+						],
+						"outputs": [],
+						"execution_count": 29
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"emp.show()"
+						],
+						"outputs": [],
+						"execution_count": 30
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"emp_gender = emp.withColumn(\"new_gender\", expr(\"case when gender = 'Male' then 'M' when gender = 'Female' then 'F' else null end\"))"
+						],
+						"outputs": [],
+						"execution_count": 32
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"emp_gender.show()"
+						],
+						"outputs": [],
+						"execution_count": 33
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							},
+							"collapsed": false
+						},
+						"source": [
+							"from pyspark.sql.functions import *\r\n",
+							"\r\n",
+							"emp_name_df = emp_gender.withColumn(\"new_name\", regexp_replace(\"name\", \"J\", \"Z\"))\r\n",
+							"\r\n",
+							"display(emp_name_df)"
+						],
+						"outputs": [],
+						"execution_count": 34
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							},
+							"collapsed": false
+						},
+						"source": [
+							"emp_date_df= emp_name_df.withColumn(\"hire_date_new\", to_date(col(\"hire_date\"), 'yyyy-mm-dd')).withColumn(\"hire_date_new\", date_format(col(\"hire_date_new\"), \"dd/MMM/yyyy\"))\r\n",
+							"\r\n",
+							"\r\n",
+							"display(emp_date_df)\r\n",
+							"\r\n",
+							"emp_date_df.printSchema()"
+						],
+						"outputs": [],
+						"execution_count": 43
+					}
+				]
+			},
+			"dependsOn": []
+		}
+	]
+}
