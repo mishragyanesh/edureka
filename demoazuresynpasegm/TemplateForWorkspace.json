@@ -17,6 +17,10 @@
 			"metadata": "Secure string for 'connectionString' of 'gyaneshsynapsews-WorkspaceDefaultSqlServer'",
 			"defaultValue": "Integrated Security=False;Encrypt=True;Connection Timeout=30;Data Source=tcp:gyaneshsynapsews.sql.azuresynapse.net,1433;Initial Catalog=@{linkedService().DBName}"
 		},
+		"demoCosmosDBLS_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'demoCosmosDBLS'"
+		},
 		"demoazuresynpasegm-WorkspaceDefaultStorage_properties_typeProperties_url": {
 			"type": "string",
 			"defaultValue": "https://demoadlsacctgm.dfs.core.windows.net"
@@ -243,7 +247,7 @@
 						"spark.dynamicAllocation.enabled": "false",
 						"spark.dynamicAllocation.minExecutors": "2",
 						"spark.dynamicAllocation.maxExecutors": "2",
-						"spark.autotune.trackingId": "e0c774fc-7c71-44f9-9170-c2e59ab58d36"
+						"spark.autotune.trackingId": "c0437161-5a7c-4dc1-a05e-39a0ee0516db"
 					}
 				},
 				"metadata": {
@@ -268,15 +272,13 @@
 						"sparkVersion": "3.4",
 						"nodeCount": 3,
 						"cores": 8,
-						"memory": 56,
-						"automaticScaleJobs": false
+						"memory": 56
 					},
 					"sessionKeepAliveTimeout": 30
 				},
 				"cells": [
 					{
 						"cell_type": "code",
-						"metadata": {},
 						"source": [
 							"print(\"Hello World\")"
 						],
@@ -484,31 +486,6 @@
 			"dependsOn": []
 		},
 		{
-			"name": "[concat(parameters('workspaceName'), '/sparkPool1')]",
-			"type": "Microsoft.Synapse/workspaces/bigDataPools",
-			"apiVersion": "2019-06-01-preview",
-			"properties": {
-				"autoPause": {
-					"enabled": true,
-					"delayInMinutes": 15
-				},
-				"autoScale": {
-					"enabled": true,
-					"maxNodeCount": 10,
-					"minNodeCount": 3
-				},
-				"nodeCount": 0,
-				"nodeSize": "Medium",
-				"nodeSizeFamily": "MemoryOptimized",
-				"sparkVersion": "3.4",
-				"isComputeIsolationEnabled": false,
-				"sessionLevelPackagesEnabled": true,
-				"annotations": []
-			},
-			"dependsOn": [],
-			"location": "eastus2"
-		},
-		{
 			"name": "[concat(parameters('workspaceName'), '/SecondNotebook')]",
 			"type": "Microsoft.Synapse/workspaces/notebooks",
 			"apiVersion": "2019-06-01-preview",
@@ -529,7 +506,7 @@
 						"spark.dynamicAllocation.enabled": "false",
 						"spark.dynamicAllocation.minExecutors": "2",
 						"spark.dynamicAllocation.maxExecutors": "2",
-						"spark.autotune.trackingId": "b0f13270-dcd4-41d0-aa73-42585e91d160"
+						"spark.autotune.trackingId": "59cf1891-7083-4093-b3bd-c08d1f63a7b2"
 					}
 				},
 				"metadata": {
@@ -554,15 +531,13 @@
 						"sparkVersion": "3.4",
 						"nodeCount": 3,
 						"cores": 8,
-						"memory": 56,
-						"automaticScaleJobs": false
+						"memory": 56
 					},
 					"sessionKeepAliveTimeout": 30
 				},
 				"cells": [
 					{
 						"cell_type": "code",
-						"metadata": {},
 						"source": [
 							"print(\"hi\")"
 						],
@@ -938,6 +913,50 @@
 				]
 			},
 			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/sparkPool1')]",
+			"type": "Microsoft.Synapse/workspaces/bigDataPools",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"autoPause": {
+					"enabled": true,
+					"delayInMinutes": 15
+				},
+				"autoScale": {
+					"enabled": true,
+					"maxNodeCount": 10,
+					"minNodeCount": 3
+				},
+				"nodeCount": 0,
+				"nodeSize": "Medium",
+				"nodeSizeFamily": "MemoryOptimized",
+				"sparkVersion": "3.4",
+				"isComputeIsolationEnabled": false,
+				"sessionLevelPackagesEnabled": true,
+				"annotations": []
+			},
+			"dependsOn": [],
+			"location": "eastus2"
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/demoCosmosDBLS')]",
+			"type": "Microsoft.Synapse/workspaces/linkedServices",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"annotations": [],
+				"type": "CosmosDb",
+				"typeProperties": {
+					"connectionString": "[parameters('demoCosmosDBLS_connectionString')]"
+				},
+				"connectVia": {
+					"referenceName": "AutoResolveIntegrationRuntime",
+					"type": "IntegrationRuntimeReference"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/integrationRuntimes/AutoResolveIntegrationRuntime')]"
+			]
 		}
 	]
 }

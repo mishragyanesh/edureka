@@ -11,6 +11,9 @@
 		"gyaneshsynapsews-WorkspaceDefaultSqlServer_connectionString": {
 			"value": "Integrated Security=False;Encrypt=True;Connection Timeout=30;Data Source=tcp:gyaneshsynapsews.sql.azuresynapse.net,1433;Initial Catalog=@{linkedService().DBName}"
 		},
+		"demoCosmosDBLS_connectionString": {
+			"value": ""
+		},
 		"demoazuresynpasegm-WorkspaceDefaultStorage_properties_typeProperties_url": {
 			"value": "https://demoadlsacctgm.dfs.core.windows.net"
 		}
