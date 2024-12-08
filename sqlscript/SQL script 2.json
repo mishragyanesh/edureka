@@ -2,7 +2,7 @@
 	"name": "SQL script 2",
 	"properties": {
 		"content": {
-			"query": "CREATE SCHEMA SalesLT",
+			"query": " SELECT  oh.SalesOrderID, oh.OrderDate,\n         p.ProductNumber, p.Color, p.Size,\n         c.EmailAddress AS CustomerEmail,\n         od.OrderQty, od.UnitPrice\n FROM SalesLT.SalesOrderHeader AS oh\n JOIN SalesLT.SalesOrderDetail AS od \n     ON oh.SalesOrderID = od.SalesOrderID\n JOIN  SalesLT.Product AS p \n     ON od.ProductID = p.ProductID\n JOIN SalesLT.Customer as c\n     ON oh.CustomerID = c.CustomerID\n ORDER BY oh.SalesOrderID;",
 			"metadata": {
 				"language": "sql"
 			},
