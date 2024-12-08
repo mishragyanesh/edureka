@@ -1,0 +1,17 @@
+{
+	"name": "HTAPSqlScript",
+	"properties": {
+		"content": {
+			"query": "-- IF (NOT EXISTS(SELECT * FROM sys.credentials WHERE name = 'htapcosmosdbsrc'))\n--     THROW 50000, 'As a prerequisite, create a credential with Azure Cosmos DB key in SECRET option:\n--     CREATE CREDENTIAL [htapcosmosdbsrc]\n--     WITH IDENTITY = ''SHARED ACCESS SIGNATURE'', SECRET = ''<Enter your Azure Cosmos DB key here>''', 0\n-- GO\n\n-- CREATE MASTER KEY\n\n-- CREATE CREDENTIAL [htapcosmosdbsrccred]\n-- WITH IDENTITY = 'Shared Access Signature', SECRET = ''\n\n\n-- SELECT TOP 100 *\n-- FROM OPENROWSET(​PROVIDER = 'CosmosDB',\n--                 CONNECTION = 'Account=htapcosmosdbsrc;Database=AdventureWorks',\n--                 OBJECT = 'Sales',\n--                 SERVER_CREDENTIAL = 'htapcosmosdbsrccred'\n-- ) AS [Sales]\n",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "serverlessPool01",
+				"poolName": "Built-in"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}
